@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Tournament Pro System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-firestore-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-storage-compat.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap');
+        body { font-family: 'Rajdhani', sans-serif; background-color: #0b0e11; color: #ffffff; }
+        .gaming-card { background: #151a21; border: 1px solid #2d3436; border-radius: 8px; transition: 0.3s; }
+        .gaming-card:hover { border-color: #ff4655; }
+        .accent-gradient { background: linear-gradient(90deg, #ff4655 0%, #ff7675 100%); }
+        .tab-active { border-bottom: 3px solid #ff4655; color: #ff4655; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="main-container" class="max-w-4xl mx-auto min-h-screen pb-10">
+        
+        <section id="auth-section" class="p-6 pt-20">
+            <div class="text-center mb-10">
+                [cite_start]<h1 class="text-5xl font-bold tracking-tighter italic text-red-550">FIRE FREE TOURNAMENTS [cite: 1]</h1>
+                [cite_start]<p class="text-gray-400 mt-2">Professional Esports Management System [cite: 1]</p>
+            </div>
+            <div class="gaming-card p-8 max-w-md mx-auto">
+                <div class="flex justify-between mb-6 border-b border-gray-700">
+                    <button id="login-tab" onclick="toggleAuthMode(true)" class="pb-2 flex-1 text-center tab-active">Login</button>
+                    <button id="reg-tab" onclick="toggleAuthMode(false)" class="pb-2 flex-1 text-center text-gray-500">Register</button>
+                </div>
+                <div class="space-y-4">
+                    <input type="email" id="email" placeholder="Email" class="w-full bg-[#0b0e11] border border-gray-700 p-3 rounded focus:outline-none focus:border-red-550">
+                    <input type="password" id="password" placeholder="Password" class="w-full bg-[#0b0e11] border border-gray-700 p-3 rounded focus:outline-none focus:border-red-550">
+                    
+                    <div id="reg-only-fields" class="hidden space-y-4">
+                        [cite_start]<input type="text" id="username" placeholder="Full Name" class="w-full bg-[#0b0e11] border border-gray-700 p-3 rounded"> [cite: 3]
+                        [cite_start]<input type="text" id="ffuid" placeholder="Free Fire UID" class="w-full bg-[#0b0e11] border border-gray-700 p-3 rounded"> [cite: 3]
+                        <div class="text-xs text-gray-500">Profile Picture:</div>
+                        [cite_start]<input type="file" id="profile-img" class="text-xs"> [cite: 3]
+                    </div>
+                    
+                    <button onclick="handleAuth()" class="w-full accent-gradient p-4 rounded font-bold uppercase tracking-widest mt-4">Execute Login</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="user-app" class="hidden">
+            <header class="p-4 flex justify-between items-center border-b border-gray-800 bg-[#0b0e11] sticky top-0 z-10">
+                [cite_start]<h2 class="text-xl font-bold italic text-red-500">PLAYER PANEL [cite: 3]</h2>
+                <div class="flex gap-4 items-center">
+                    [cite_start]<button onclick="showAI('user')" class="bg-blue-600 px-3 py-1 rounded-full text-xs">AI HELP</button> [cite: 4, 5]
+                    <button onclick="logout()" class="text-gray-400 text-xs border border-gray-700 px-3 py-1 rounded">Logout</button>
+                </div>
+            </header>
+
+            <div class="p-4 grid grid-cols-3 gap-2 overflow-x-auto mb-4">
+                [cite_start]<button class="bg-gray-800 p-2 rounded text-xs whitespace-nowrap">SOLO / DUO</button> [cite: 3]
+                [cite_start]<button class="bg-gray-800 p-2 rounded text-xs whitespace-nowrap">SQUAD / CS</button> [cite: 3]
+                [cite_start]<button class="bg-gray-800 p-2 rounded text-xs whitespace-nowrap">CS RANK</button> [cite: 3]
+            </div>
+
+            <div class="flex gap-6 px-4 border-b border-gray-800 mb-6">
+                [cite_start]<button class="pb-2 text-red-500 border-b-2 border-red-500">Upcoming</button> [cite: 3]
+                [cite_start]<button class="pb-2 text-gray-500">Live</button> [cite: 3]
+                [cite_start]<button class="pb-2 text-gray-500">Completed</button> [cite: 4]
+            </div>
+
+            <div id="tournament-feed" class="p-4 space-y-4">
+                <div class="gaming-card p-5">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold uppercase">Clash Squad Pro League</h3>
+                            <p class="text-xs text-gray-500">Date: 2026-02-10 | [cite_start]Time: 18:00</p> [cite: 3]
+                        </div>
+                        <span class="bg-green-600/20 text-green-500 px-2 py-1 rounded text-[10px] font-bold">OPEN</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mb-4 text-center">
+                        [cite_start]<div class="bg-black/30 p-2 rounded"><p class="text-[10px] text-gray-500">PRIZE</p><p class="text-sm font-bold">₹2500</p></div> [cite: 3]
+                        [cite_start]<div class="bg-black/30 p-2 rounded"><p class="text-[10px] text-gray-500">ENTRY</p><p class="text-sm font-bold">₹50</p></div> [cite: 3]
+                        <div class="bg-black/30 p-2 rounded"><p class="text-[10px] text-gray-500">SLOTS</p><p class="text-sm font-bold">48/100</p></div>
+                    </div>
+                    [cite_start]<button onclick="openJoinModal()" class="w-full accent-gradient py-2 rounded font-bold text-sm">JOIN TOURNAMENT</button> [cite: 3]
+                </div>
+            </div>
+        </section>
+
+        <section id="admin-app" class="hidden">
+            <header class="p-4 flex justify-between items-center border-b border-red-900 bg-[#0b0e11] sticky top-0 z-10">
+                [cite_start]<h2 class="text-xl font-bold italic text-yellow-500">ADMIN CONTROL [cite: 5]</h2>
+                <button onclick="logout()" class="text-gray-400 text-xs border border-gray-700 px-3 py-1 rounded">Logout</button>
+            </header>
+
+            <div class="grid grid-cols-2 p-4 gap-4">
+                <div class="gaming-card p-4 text-center">
+                    [cite_start]<p class="text-xs text-gray-500 uppercase">Active Users</p> [cite: 5]
+                    <p class="text-2xl font-bold">1,240</p>
+                </div>
+                <div class="gaming-card p-4 text-center">
+                    [cite_start]<p class="text-xs text-gray-500 uppercase">Pending Payments</p> [cite: 5]
+                    <p class="text-2xl font-bold text-yellow-500">14</p>
+                </div>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <div class="gaming-card p-4">
+                    [cite_start]<h3 class="font-bold mb-3">CREATE TOURNAMENT</h3> [cite: 5]
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" placeholder="Title" class="bg-black border border-gray-800 p-2 rounded text-sm">
+                        [cite_start]<input type="text" placeholder="Entry Fee" class="bg-black border border-gray-800 p-2 rounded text-sm"> [cite: 5]
+                        [cite_start]<input type="datetime-local" class="bg-black border border-gray-800 p-2 rounded text-sm col-span-2"> [cite: 5]
+                        <button class="bg-yellow-600 col-span-2 py-2 rounded font-bold text-black mt-2">PUBLISH MATCH</button>
+                    </div>
+                </div>
+
+                <div class="gaming-card p-4">
+                    [cite_start]<h3 class="font-bold mb-3">PENDING APPROVALS</h3> [cite: 5]
+                    <div class="space-y-2">
+                        <div class="bg-black/50 p-3 rounded flex justify-between items-center border-l-4 border-yellow-500">
+                            <div>
+                                <p class="text-sm font-bold">Player_One (UID: 123456)</p>
+                                [cite_start]<button class="text-[10px] text-blue-400 underline">View Proof Screenshot</button> [cite: 5]
+                            </div>
+                            <div class="flex gap-2">
+                                [cite_start]<button class="bg-green-600 px-2 py-1 rounded text-xs">Approve</button> [cite: 5]
+                                <button class="bg-red-600 px-2 py-1 rounded text-xs">Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="join-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-6 z-50">
+        <div class="gaming-card p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Complete Registration</h3>
+            [cite_start]<p class="text-sm text-gray-400 mb-4 font-bold">Pay ₹50 to: tournaments@upi</p> [cite: 4]
+            <div class="border-2 border-dashed border-gray-700 p-4 text-center mb-4">
+                <input type="file" id="pay-proof" class="hidden" onchange="previewFile()">
+                [cite_start]<label for="pay-proof" class="cursor-pointer text-xs text-gray-400">Click to Upload Payment Screenshot</label> [cite: 4]
+            </div>
+            <div id="preview-box" class="hidden mb-4 h-32 bg-black rounded overflow-hidden">
+                [cite_start]<img id="img-preview" src="" class="w-full h-full object-contain"> [cite: 4]
+            </div>
+            <div class="flex gap-2">
+                [cite_start]<button onclick="submitJoin()" class="flex-1 accent-gradient py-2 rounded font-bold">SUBMIT PROOF</button> [cite: 4]
+                <button onclick="closeModals()" class="flex-1 bg-gray-700 py-2 rounded">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        [cite_start]// CONFIGURATION [cite: 3]
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWy8b9v7QWV-ATmncQMvnwuXUcWbogUJc",
+            authDomain: "project-bb2d6.firebaseapp.com",
+            databaseURL: "https://project-bb2d6-default-rtdb.firebaseio.com",
+            projectId: "project-bb2d6",
+            storageBucket: "project-bb2d6.firebasestorage.app",
+            messagingSenderId: "890383566734",
+            appId: "1:890383566734:web:222086449252466dfec6df"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let isLoginMode = true;
+
+        function toggleAuthMode(isLogin) {
+            isLoginMode = isLogin;
+            document.getElementById('reg-only-fields').classList.toggle('hidden', isLogin);
+            document.getElementById('login-tab').className = isLogin ? 'pb-2 flex-1 text-center tab-active' : 'pb-2 flex-1 text-center text-gray-500';
+            document.getElementById('reg-tab').className = !isLogin ? 'pb-2 flex-1 text-center tab-active' : 'pb-2 flex-1 text-center text-gray-500';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                if (isLoginMode) {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } else {
+                    const res = await auth.createUserWithEmailAndPassword(email, password);
+                    await db.collection('users').doc(res.user.uid).set({
+                        username: document.getElementById('username').value,
+                        ffuid: document.getElementById('ffuid').value,
+                        role: 'player'
+                    [cite_start]}); [cite: 3]
+                }
+                checkUserRole();
+            } catch (err) { alert(err.message); }
+        }
+
+        function checkUserRole() {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    document.getElementById('auth-section').classList.add('hidden');
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists && doc.data().role === 'admin') {
+                        [cite_start]document.getElementById('admin-app').classList.remove('hidden'); [cite: 2, 6]
+                    } else {
+                        [cite_start]document.getElementById('user-app').classList.remove('hidden'); [cite: 2]
+                    }
+                }
+            });
+        }
+
+        function previewFile() {
+            const preview = document.getElementById('img-preview');
+            const file = document.getElementById('pay-proof').files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                preview.src = reader.result;
+                [cite_start]document.getElementById('preview-box').classList.remove('hidden'); [cite: 4]
+            }
+            if (file) reader.readAsDataURL(file);
+        }
+
+        function openJoinModal() { document.getElementById('join-modal').classList.remove('hidden'); }
+        function closeModals() { document.getElementById('join-modal').classList.add('hidden'); }
+        function logout() { auth.signOut(); window.location.reload(); }
+
+        function showAI(type) {
+            [cite_start]const query = prompt("Gemini AI Assistant: How can I help you today?"); [cite: 4, 5]
+            [cite_start]if(query) alert("Gemini Helper: Tournament rules state UID must match your FF Profile exactly. Please check assets/images for visual guides."); [cite: 4]
+        }
+    </script>
+</body>
+</html>
